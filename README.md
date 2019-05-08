@@ -58,8 +58,12 @@ ssh into the ec2 instance and run this commands:
 curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
 ```
 
-`chmod +x ./kubectl`
-`mv ./kubectl /usr/bin`
+```Shell
+chmod +x ./kubectl
+```
+```Shell
+mv ./kubectl /usr/bin
+```
 
 **Install minikube**
 ```shell
@@ -72,16 +76,24 @@ curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/miniku
 ```Shell
 curl -o helm.tar.gz -L https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz
 ```
-`tar -xvf helm.tar.gz`
-`mv linux-amd64/helm /usr/bin`
+```Shell
+tar -xvf helm.tar.gz
+```
+```Shell
+mv linux-amd64/helm /usr/bin
+```
 
 **Install socat**
-`yum install socat -y`
+```Shell
+yum install socat -y
+```
 
 ## 4 - Start minikube
 
 Start minikube with 8Go of ram
-`minikube start --memory=8192 --cpus=4 --kubernetes-version=v1.13.0 --vm-driver=none`
+```Shell
+minikube start --memory=8192 --cpus=4 --kubernetes-version=v1.13.0 --vm-driver=none
+```
 
 # II APIC Mesh governance installation
 
