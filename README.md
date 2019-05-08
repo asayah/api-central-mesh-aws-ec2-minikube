@@ -33,11 +33,21 @@ In this  tutorial we will use a ec2 instance to create an ec2 instance.
 
  - Then setup the free DNS on you console  
 
- `sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm`
-`sudo yum install -y noip`
-`sudo noip2 -C `
-`sudo systemctl enable noip.service`
-`sudo systemctl start noip.service`
+ ```Shell
+sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+```
+ ```Shell
+ sudo yum install -y noip
+ ```
+```Shell
+sudo noip2 -C 
+```
+ ```Shell
+ sudo systemctl enable noip.service
+ ```
+ ```Shell
+ sudo systemctl start noip.service
+ ```
 
 After few second your ec2 instance should be reachable using the dns host provided, you can verify that by doing and ssh again and using the host you provided instead of the generated hostname provided by ec2
 For example: `ssh -i asayah.pem ec2-user@asayah.ddns.net`
@@ -46,12 +56,20 @@ For example: `ssh -i asayah.pem ec2-user@asayah.ddns.net`
 ssh into the ec2 instance and run this commands: 
 
 **Login as root**
-`sudo -i`
+```Shell
+sudo -i
+```
 
 **Install Docker**
-`yum update -y`
-`amazon-linux-extras install docker`
-`service docker start`
+```Shell 
+yum update -y
+```
+```Shell
+amazon-linux-extras install docker
+```
+```Shell
+service docker start
+```
 
 **Install kubctl**
 ```shell
@@ -70,7 +88,9 @@ mv ./kubectl /usr/bin
 curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 \
   && chmod +x minikube
 ```
-`mv ./minikube /usr/bin`
+```Shell
+mv ./minikube /usr/bin
+```
 
 **Install helm**
 ```Shell
