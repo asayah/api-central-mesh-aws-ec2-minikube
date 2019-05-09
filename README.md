@@ -1,8 +1,10 @@
 
+
 # Introduction
 
 This page illustrate a way for deploying API Central Mesh Governance on AWS for demo purposes. there is multiple ways of installing kubernetes, in this tutorial we will be using minikube.  
 
+⚠️  Disclaimer: installing minikube on AWS is not the best way of creating a  hosted kubernetes cluster( explore kops, GKE, EKS...) ,  the purpose of this tutorial is just to give an alternative . 
 
 # I Prerequisites 
 
@@ -97,7 +99,7 @@ Start minikube with 8Go of ram
 minikube start --memory=8192 --cpus=4 --kubernetes-version=v1.13.0 --vm-driver=none
 ```
 
-# II APIC Mesh governance installation
+## 5 - Apicentral Mesh governance prerequisites 
 
  - Go on apicentral https://apicentral.axway.com
  - In the tab services Create an environment, use the host of the ec2 instance and port 443, usage should be publicly accessible.  
@@ -114,11 +116,12 @@ minikube start --memory=8192 --cpus=4 --kubernetes-version=v1.13.0 --vm-driver=n
 In the following script change YOURHOST by your no ip host value.  
  ```Shell
  ssh -i yourkey.pem ec2-user@YOURHOST
- sudo -i 
- mv /tmp/******-override.zip .
- unzip /******-override.zip
  ```
 
+⚠️ Run all the remaining commands in this tutorial using the root user
+```Shell
+ sudo -i 
+```
 
  - Generate a certifcate for istio gateway. 
  Istio uses certificate to secure it gateway, as a prerequisite we have to create a kubernetes secret containing the certifcate. 
@@ -126,9 +129,71 @@ In the following script change YOURHOST by your no ip host value.
 ```Shell
 cat istioOverride.yaml | grep secretName
 ```
-in the following command, replace the YOURHOST by your host, and PUT_YOUR_SECRET_NAME by the secret name
+In the following command, replace the YOURHOST by your host, and PUT_YOUR_SECRET_NAME by the secret name
 ```Shell
 certbot certonly --standalone -d YOURHOST
 kubectl create ns istio-system
 kubectl create -n istio-system secret tls PUT_YOUR_SECRET_NAME --cert /etc/letsencrypt/live/YOURHOST/fullchain.pem --key /etc/letsencrypt/live/YOURHOST/privkey.pem -o yaml
 ```
+Now lets create a namespace (apic-control) that will be used by APIC Agents, (Service Discovery Agent, Config Sync Agent)
+
+```Shell
+kubectl create namespace apic-control
+```
+Create RSA  keys  for the API Central agents  authentication
+```Shell
+mkdir -p /tmp/sda
+mkdir -p /tmp/csa
+openssl genpkey -algorithm RSA -out /tmp/sda/private_key.pem -pkeyopt rsa_keygen_bits:2048
+openssl rsa -pubout -in /tmp/sda/private_key.pem -out /tmp/sda/public_key.der -outform der && base64 /tmp/sda/public_key.der > /tmp/sda/public_key
+openssl genpkey -algorithm RSA -out /tmp/csa/private_key.pem -pkeyopt rsa_keygen_bits:2048
+openssl rsa -pubout -in /tmp/csa/private_key.pem -out /tmp/csa/public_key.der -outform der && base64 /tmp/csa/public_key.der > /tmp/csa/public_key
+
+```
+
+Now lets create  kubernetes secrets to store them
+```Shell
+ kubectl create --namespace apic-control secret generic csa-secrets --from-file=publicKey=/tmp/csa/public_key --from-file=privateKey=/tmp/csa/private_key.pem --from-literal=password="" -o yaml
+ kubectl create --namespace apic-control secret generic sda-secrets --from-file=publicKey=/tmp/sda/public_key --from-file=privateKey=/tmp/sda/private_key.pem --from-literal=password="" -o yaml
+```
+We can proceed now to the installation of Istio and the Agents.
+
+# II APIC Mesh governance installation
+
+ Lets extract the API Central overide files 
+ ```Shell
+ mv /tmp/******-override.zip ./  # replace ******-override.zip by the file you downloaded form API Central
+ unzip /******-override.zip
+ ```
+
+To add Axway helm chart repo run this command: 
+```Shell
+helm repo add axway https://charts.axway.com/charts
+```
+Now we can install Istio: 
+
+```Shell
+helm upgrade --install --namespace apic-control istio axway-public/istio -f istioOverride.yaml
+```
+Not its time to install APIC mesh agents
+```Shell
+helm upgrade --install --namespace apic-control apic-hybrid axway/apicentral-hybrid -f hybridOverride.yaml  --set observer.enabled=true --set observer.filebeat.sslVerification=none
+```
+
+Normally we would use nodeport if we want to use Minikube,  instead of modifing the installation lets just map the gateway internal port to 443 so we can acess it.
+
+```Shell
+kubectl get svc -n istio-system
+apic-e4f77cf86a5b8349016a990e8f821b14-gateway   LoadBalancer   10.106.166.185   <pending>     443:30099/TCP                           23h
+```
+Identify the gateway port, in my case **30099**, and foward it.
+run the cmd screen to keep the forwarding process alive
+```Shell
+screen
+socat TCP-LISTEN:443,fork TCP:0.0.0.0:30099 # replace 30099 by your gateway port
+```
+Press Ctrl-A then Ctrl-D. This will **detach** your screen session but leave your processes running. You can now log out of the remote box.
+
+Congrats your installed APIC Mesh Governance on a minikube on AWS, no you can go back on API Central, on the environment page, your services should be discoverded. 
+
+
