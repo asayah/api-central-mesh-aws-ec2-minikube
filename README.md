@@ -4,7 +4,7 @@
 
 This page illustrate a way for deploying API Central Mesh Governance on AWS for demo purposes. there is multiple ways of installing kubernetes, in this tutorial we will be using minikube.  
 
-⚠️  Disclaimer: installing minikube on AWS is not the best way of creating a  hosted kubernetes cluster( explore kops, GKE, EKS...) ,  the purpose of this tutorial is just to give an alternative . 
+⚠️  Disclaimer: installing minikube on AWS is not the best way of creating a  hosted kubernetes cluster( explore kops, GKE, EKS...) ,  the purpose of this tutorial is just to give an alternative. 
 
 # I Prerequisites 
 
