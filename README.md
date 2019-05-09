@@ -175,7 +175,7 @@ Now we can install Istio:
 ```Shell
 helm upgrade --install --namespace apic-control istio axway-public/istio -f istioOverride.yaml
 ```
-Not its time to install APIC mesh agents
+Its time to install APIC mesh agents
 ```Shell
 helm upgrade --install --namespace apic-control apic-hybrid axway/apicentral-hybrid -f hybridOverride.yaml  --set observer.enabled=true --set observer.filebeat.sslVerification=none
 ```
