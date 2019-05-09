@@ -4,7 +4,7 @@
 This page illustrate a way for deploying API Central Mesh Governance on AWS for demo purposes. there is multiple ways of installing kubernetes, in this tutorial we will be using minikube.  
 
 
-# I Prerequisites
+# I Prerequisites 
 
 ## 1 - Create an ec2 instance on AWS
 
@@ -35,19 +35,11 @@ In this  tutorial we will use a ec2 instance to create an ec2 instance.
 
  ```Shell
 sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-```
- ```Shell
- sudo yum install -y noip
- ```
-```Shell
+sudo yum install -y noip
 sudo noip2 -C 
+sudo systemctl enable noip.service
+sudo systemctl start noip.service
 ```
- ```Shell
- sudo systemctl enable noip.service
- ```
- ```Shell
- sudo systemctl start noip.service
- ```
 
 After few second your ec2 instance should be reachable using the dns host provided, you can verify that by doing and ssh again and using the host you provided instead of the generated hostname provided by ec2
 For example: `ssh -i asayah.pem ec2-user@asayah.ddns.net`
@@ -63,23 +55,14 @@ sudo -i
 **Install Docker**
 ```Shell 
 yum update -y
-```
-```Shell
 amazon-linux-extras install docker
-```
-```Shell
 service docker start
 ```
 
 **Install kubctl**
 ```shell
 curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
-```
-
-```Shell
 chmod +x ./kubectl
-```
-```Shell
 mv ./kubectl /usr/bin
 ```
 
@@ -87,25 +70,24 @@ mv ./kubectl /usr/bin
 ```shell
 curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 \
   && chmod +x minikube
-```
-```Shell
 mv ./minikube /usr/bin
 ```
 
 **Install helm**
 ```Shell
 curl -o helm.tar.gz -L https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz
-```
-```Shell
 tar -xvf helm.tar.gz
-```
-```Shell
 mv linux-amd64/helm /usr/bin
 ```
 
 **Install socat**
 ```Shell
 yum install socat -y
+```
+
+**Install certbot**
+```Shell
+sudo yum install certbot -y
 ```
 
 ## 4 - Start minikube
@@ -117,4 +99,36 @@ minikube start --memory=8192 --cpus=4 --kubernetes-version=v1.13.0 --vm-driver=n
 
 # II APIC Mesh governance installation
 
+ - Go on apicentral https://apicentral.axway.com
+ - In the tab services Create an environment, use the host of the ec2 instance and port 443, usage should be publicly accessible.  
+![create env](http://i65.tinypic.com/k4wi6f.png)
 
+ - Download the zip containing the overrides.
+ - transfer this zip in the /tmp folder of your ec2 instance using SCP
+ In the following script change YOURHOST by your no ip host value.  
+ ```Shell
+ scp -i asayah.pem ******-override.zip  ec2-user@YOURHOST:/tmp
+ ```
+
+ - SSH again in your ec2 instance
+In the following script change YOURHOST by your no ip host value.  
+ ```Shell
+ ssh -i yourkey.pem ec2-user@YOURHOST
+ sudo -i 
+ mv /tmp/******-override.zip .
+ unzip /******-override.zip
+ ```
+
+
+ - Generate a certifcate for istio gateway. 
+ Istio uses certificate to secure it gateway, as a prerequisite we have to create a kubernetes secret containing the certifcate. 
+⚠️ first locate the name of the secret that you will have to use, by doing 
+```Shell
+cat istioOverride.yaml | grep secretName
+```
+in the following command, replace the YOURHOST by your host, and PUT_YOUR_SECRET_NAME by the secret name
+```Shell
+certbot certonly --standalone -d YOURHOST
+kubectl create ns istio-system
+kubectl create -n istio-system secret tls PUT_YOUR_SECRET_NAME --cert /etc/letsencrypt/live/YOURHOST/fullchain.pem --key /etc/letsencrypt/live/YOURHOST/privkey.pem -o yaml
+```
