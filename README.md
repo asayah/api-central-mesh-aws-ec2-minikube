@@ -81,6 +81,7 @@ curl -o helm.tar.gz -L https://storage.googleapis.com/kubernetes-helm/helm-v2.13
 tar -xvf helm.tar.gz
 mv linux-amd64/helm /usr/bin
 ```
+Don't forget to run a helm init after starting your minikube. 
 
 **Install socat**
 ```Shell
