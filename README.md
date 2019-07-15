@@ -174,6 +174,7 @@ helm repo add axway https://charts.axway.com/charts
 Now we can install Istio: 
 
 ```Shell
+helm upgrade --install istio-init --namespace istio-system axway/istio-init
 helm upgrade --install --namespace istio-system istio axway/istio -f istioOverride.yaml
 ```
 Its time to install APIC mesh agents
